@@ -1,0 +1,36 @@
+---
+description: Obliga a seguir el skill senior-web-developer, el alcance permitido del Web Challenge de Spin y Atomic Design en toda la wallet.
+alwaysApply: true
+---
+
+# Web Challenge
+
+Antes de escribir o cambiar código, lee y sigue `.cursor/skills/senior-web-developer/SKILL.md`. El alcance detallado está en `challenge.md` y las capas en `atomic-design.md`, dentro de ese mismo skill.
+
+## Alcance permitido
+
+- Next.js + TypeScript. Datos mock solo por API Routes.
+- Flujo único: Login → Home → Nueva transacción → Confirmación / comprobante.
+- Sesión mock. Sin autenticación, pagos ni backends reales.
+- Estados de carga y error simulado en Login; carga, vacío y error en Home.
+
+## Atomic Design
+
+- UI en `src/components/atoms|molecules|organisms|templates`. Rutas en `src/app`. Reglas puras en `src/domain`.
+- Dependencias solo hacia abajo: page → template → organism → molecule → atom.
+- Atoms y molecules son presentacionales: sin reglas de negocio, fetch ni routing.
+- Pages son las únicas dueñas de I/O y de navegación.
+
+## Negocio y confirmación
+
+- Monto mayor a cero, monto menor o igual al saldo, y destinatario obligatorio viven en `src/domain` y tienen test unitario.
+- La confirmación responde al azar: éxito, error de red con reintento, fondos insuficientes, timeout y error desconocido.
+
+## Documentación
+
+- Justifica rendering, router, estado y e2e en `DECISIONS.md`.
+- Registra en `AI_USAGE.md` qué se aceptó, qué se corrigió y qué decidió la persona. No inventes esa última parte.
+
+## Ejemplo
+
+`AmountInput` es molecule: formatea y emite el valor. `validateTransfer(draft, balance)` vive en `src/domain`. La page bloquea el submit y el organism muestra el error.

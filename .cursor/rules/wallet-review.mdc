@@ -1,0 +1,12 @@
+---
+description: Al pedir un review de la wallet, delega en wallet-reviewer y sigue el skill wallet-review (SOLID, Atomic Design, código muerto y tests).
+alwaysApply: false
+---
+
+# Review de la wallet
+
+Cuando la persona pida un review del código implementado, no lo hagas en esta conversación. Delega en el agente `wallet-reviewer` y sigue `.cursor/skills/wallet-review/SKILL.md`.
+
+El review busca mejoras no vistas en el desarrollo, SOLID, Atomic Design y código muerto. Corrige solo hallazgos con evidencia, dentro del challenge. `npm test` y `npm run test:e2e` tienen que terminar en cero.
+
+No aplica al implementar pantallas, dominio o API. Eso lo cubre `web-challenge.mdc`.

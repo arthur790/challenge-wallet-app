@@ -21,7 +21,8 @@ type TransactionComposerProps = {
   savingContact: boolean;
   loading: boolean;
   summary: { amountLabel: string; recipientLabel: string } | null;
-  violationMessage?: string;
+  amountError?: string;
+  recipientError?: string;
   contactError?: string;
   onAmountChange: (value: string) => void;
   onSelectContact: (id: string) => void;
@@ -40,7 +41,8 @@ export function TransactionComposer({
   savingContact,
   loading,
   summary,
-  violationMessage,
+  amountError,
+  recipientError,
   contactError,
   onAmountChange,
   onSelectContact,
@@ -51,13 +53,14 @@ export function TransactionComposer({
 }: TransactionComposerProps) {
   return (
     <div className="flex flex-col gap-6">
-      <AmountInput
-        value={amount}
-        onChange={onAmountChange}
-        error={violationMessage}
-      />
+      <AmountInput value={amount} onChange={onAmountChange} error={amountError} />
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">Favoritos</h2>
+        {recipientError ? (
+          <p className="text-sm text-danger" role="alert">
+            {recipientError}
+          </p>
+        ) : null}
         {contacts.length === 0 ? (
           <p className="text-sm text-muted">Todavía no hay contactos.</p>
         ) : (

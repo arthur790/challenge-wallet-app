@@ -4,8 +4,15 @@ import {
   type ConfirmationOutcome,
   type ConfirmationStatus,
 } from "@/domain/confirmation";
-import type { Contact, Movement, SessionUser, Wallet } from "@/domain/wallet";
+import type {
+  Contact,
+  Movement,
+  MovementPage,
+  SessionUser,
+  Wallet,
+} from "@/domain/wallet";
 import { delay } from "@/server/delay";
+import { paginateMovements } from "@/server/paginate-movements";
 
 const USER: SessionUser = {
   userId: "user-ada",
@@ -27,29 +34,7 @@ type GlobalWithWallet = typeof globalThis & {
 function initialState(): WalletState {
   return {
     balance: 2500,
-    movements: [
-      {
-        id: "mov-1",
-        title: "Nómina",
-        amount: 3200,
-        direction: "in",
-        createdAt: "2026-10-18T15:00:00.000Z",
-      },
-      {
-        id: "mov-2",
-        title: "Café",
-        amount: 85,
-        direction: "out",
-        createdAt: "2026-10-19T13:30:00.000Z",
-      },
-      {
-        id: "mov-3",
-        title: "Transferencia a Ana",
-        amount: 150,
-        direction: "out",
-        createdAt: "2026-10-20T09:10:00.000Z",
-      },
-    ],
+    movements: seedMovements(),
     contacts: [
       { id: "contact-ana", name: "Ana Ruiz", identifier: "5511111111" },
       { id: "contact-luis", name: "Luis Mora", identifier: "5522222222" },
@@ -82,12 +67,24 @@ export async function getWallet(view?: string): Promise<Wallet> {
   }
 
   const current = state();
+  const page = listMovements({ cursor: null, view });
 
   return {
     user: USER,
     balance: current.balance,
-    movements: view === "empty" ? [] : [...current.movements],
+    movements: page.movements,
   };
+}
+
+export function listMovements(input: {
+  cursor?: string | null;
+  view?: string;
+} = {}): MovementPage {
+  if (input.view === "empty") {
+    return { movements: [], nextCursor: null };
+  }
+
+  return paginateMovements(state().movements, input.cursor ?? null);
 }
 
 export function listContacts(): Contact[] {
@@ -151,6 +148,32 @@ export async function settleTransfer(input: {
       createdAt,
     },
   };
+}
+
+function seedMovements(): Movement[] {
+  return [
+    {
+      id: "mov-3",
+      title: "Transferencia a Ana",
+      amount: 150,
+      direction: "out",
+      createdAt: "2026-10-20T09:10:00.000Z",
+    },
+    {
+      id: "mov-2",
+      title: "Café",
+      amount: 85,
+      direction: "out",
+      createdAt: "2026-10-19T13:30:00.000Z",
+    },
+    {
+      id: "mov-1",
+      title: "Nómina",
+      amount: 3200,
+      direction: "in",
+      createdAt: "2026-10-18T15:00:00.000Z",
+    },
+  ];
 }
 
 function resolveStatus(forcedStatus?: string | null): ConfirmationStatus {

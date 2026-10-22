@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { buttonClassName } from "@/components/atoms/Button/Button";
 import { BalanceHeader } from "@/components/organisms/BalanceHeader/BalanceHeader";
-import { MovementsList } from "@/components/organisms/MovementsList/MovementsList";
 import { WalletTemplate } from "@/components/templates/WalletTemplate/WalletTemplate";
-import { getWallet } from "@/server/store";
+import { getWallet, listMovements } from "@/server/store";
 import { RequireSession } from "../require-session";
+import { HomeMovements } from "./home-movements";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   }
 
   const wallet = await getWallet(selected);
+  const movementPage = listMovements({ cursor: null, view: selected });
 
   return (
     <RequireSession>
@@ -33,7 +34,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         }
       >
         <BalanceHeader name={wallet.user.name} balance={wallet.balance} />
-        <MovementsList movements={wallet.movements} />
+        <HomeMovements
+          key={selected ?? "ready"}
+          initialMovements={movementPage.movements}
+          nextCursor={movementPage.nextCursor}
+        />
       </WalletTemplate>
     </RequireSession>
   );

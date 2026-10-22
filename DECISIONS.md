@@ -2,9 +2,11 @@
 
 ## Rendering
 
-Home es un Server Component y lee el mock en proceso. `loading.tsx` cubre la carga y `error.tsx` es Client Component porque Next lo exige. `export const dynamic = "force-dynamic"` evita que el saldo quede congelado en un render estático. Login, nueva transacción y confirmación son Client Components: son formularios e interacción, incluido el reintento. No hay Server Actions. El reintento vuelve a llamar al Route Handler.
+Home es un Server Component y lee el mock en proceso: saldo, nombre y la primera página de movimientos. Las siguientes páginas dependen del scroll, así que un Client Component de la ruta pide `GET /api/wallet/movements` y las acumula en estado local, no en Zustand. `MovementsList` observa el final de la lista y avisa; no llama a la red. `loading.tsx` y `error.tsx` cubren solo la primera página. La siguiente muestra su spinner y, si falla, un reintento que no quita las filas ya visibles. Los query `view` no se reenvían al pedir más.
 
-El error de Home se dispara con `?view=error`. `reset()` volvería a lanzar el mismo error porque el query sigue ahí, así que el botón recarga `/home` sin ese parámetro.
+`loading.tsx` cubre la carga inicial y `error.tsx` es Client Component porque Next lo exige. `export const dynamic = "force-dynamic"` evita que el saldo quede congelado en un render estático. Login, nueva transacción y confirmación son Client Components: son formularios e interacción, incluido el reintento. No hay Server Actions. El reintento de la confirmación vuelve a llamar al Route Handler.
+
+El error de Home se dispara con `?view=error`. `reset()` volvería a lanzar el mismo error porque el query sigue ahí, así que el botón recarga `/home` sin ese parámetro. El cursor de la lista es el id del último movimiento ya mostrado, porque un envío exitoso se antepone y un offset quedaría desalineado.
 
 ## Router
 
@@ -34,7 +36,7 @@ Playwright, un worker, Chromium. Dos flujos: el camino feliz hasta el comprobant
 
 ## Datos
 
-Un store en `globalThis` compartido por los Route Handlers y por Home, para que un éxito se vea al volver al inicio dentro del mismo proceso. El cliente habla con los handlers a través de `src/services`. Sin red externa.
+Un store en `globalThis` compartido por los Route Handlers y por Home, para que un éxito se vea al volver al inicio dentro del mismo proceso. El seed son los tres movimientos originales, más reciente primero, alineado con el anteponer de un envío exitoso. El cliente habla con los handlers a través de `src/services`. Sin red externa.
 
 `network-error` es un JSON, no un `fetch` cortado. Si `fetch` falla de verdad, la página lo muestra como error de red y ofrece reintento. `timeout` responde a los ~3 s con un texto distinto al de red. El query `outcome` solo aplica a la primera confirmación de esa visita, para que el reintento no quede atrapado en el mismo error.
 
@@ -56,6 +58,8 @@ Los tests unitarios usan Vitest 3 y jsdom 26. Vitest 4 y jsdom 30 no cargan en N
 - Fondos insuficientes en el dominio, antes del `POST`, y también como respuesta del mock aunque el cliente ya haya validado.
 - Timeout distinto de un error de red.
 - Lista de movimientos vacía.
+- Cursor de movimientos desconocido: la respuesta trae una página vacía y `nextCursor` null, para cortar y no entrar en bucle.
+- Respuesta de una página cuyo cursor ya no es el pendiente: se descarta y el cursor no avanza.
 - Formato de login: email simple o teléfono de 10 dígitos.
 - Error simulado con `error@wallet.test` y `0000000000`.
 - Hidratación de la sesión antes de redirigir.
@@ -64,4 +68,4 @@ Los tests unitarios usan Vitest 3 y jsdom 26. Vitest 4 y jsdom 30 no cargan en N
 
 ## Con más tiempo
 
-Revalidar en el handler con la misma función de dominio, paginar movimientos, hacer idempotente la confirmación, persistir los contactos fuera de la memoria del proceso y sustituir la sesión mock por autenticación real.
+Revalidar en el handler con la misma función de dominio, hacer idempotente la confirmación, persistir los contactos fuera de la memoria del proceso y sustituir la sesión mock por autenticación real.

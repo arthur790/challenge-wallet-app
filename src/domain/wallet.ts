@@ -22,3 +22,8 @@ export type Wallet = {
   balance: number;
   movements: Movement[];
 };
+
+export type MovementPage = {
+  movements: Movement[];
+  nextCursor: string | null;
+};

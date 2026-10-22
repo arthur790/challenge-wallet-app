@@ -111,7 +111,9 @@ export default function TransactionPage() {
       });
       setContacts((current) => [created, ...current]);
       setSelectedContactId(created.id);
-      setViolation(null);
+      setViolation((current) =>
+        current === "recipient-required" ? null : current,
+      );
       setNewContactName("");
       setNewContactIdentifier("");
     } catch {
@@ -174,15 +176,29 @@ export default function TransactionPage() {
             savingContact={savingContact}
             loading={loading}
             summary={summary}
-            violationMessage={violation ? transferMessages[violation] : undefined}
+            amountError={
+              violation === "amount-not-positive" ||
+              violation === "insufficient-balance"
+                ? transferMessages[violation]
+                : undefined
+            }
+            recipientError={
+              violation === "recipient-required"
+                ? transferMessages[violation]
+                : undefined
+            }
             contactError={contactError}
             onAmountChange={(value) => {
               setAmount(value);
-              setViolation(null);
+              setViolation((current) =>
+                current === "recipient-required" ? current : null,
+              );
             }}
             onSelectContact={(id) => {
               setSelectedContactId(id);
-              setViolation(null);
+              setViolation((current) =>
+                current === "recipient-required" ? null : current,
+              );
             }}
             onNewContactNameChange={setNewContactName}
             onNewContactIdentifierChange={setNewContactIdentifier}

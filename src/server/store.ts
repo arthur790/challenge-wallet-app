@@ -146,6 +146,7 @@ export async function settleTransfer(input: {
       amount: input.amount,
       recipientName: contact.name,
       createdAt,
+      balanceAfter: current.balance,
     },
   };
 }

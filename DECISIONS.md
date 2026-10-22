@@ -26,6 +26,8 @@ Zustand en memoria para el borrador (`TransferDraft` y el nombre del destinatari
 
 Saldo, movimientos y contactos no se copian al store. La página de transacción guarda el saldo en estado local solo para validar antes de enviar.
 
+El borrador también guarda el identificador del destinatario para mostrarlo enmascarado en la confirmación. Si el cargo se confirma, esa page limpia el borrador: una transacción nueva no reutiliza el monto y volver a abrir la confirmación no reenvía el cargo. Si la respuesta es fondos insuficientes o error desconocido, el borrador sigue y la página de transacción lo vuelve a pintar. El comprobante incluye `balanceAfter`, el saldo del store justo después del cargo. Antes de confirmar, la page pide el saldo solo para la fila "Saldo después".
+
 ## Tests
 
 Los tests unitarios viven en `tests/` espejando `src/`, y los e2e en `tests/e2e/`, para buscarlos en un solo sitio; Vitest incluye solo `tests/**/*.test.ts(x)` y Playwright usa `testDir: ./tests/e2e`.

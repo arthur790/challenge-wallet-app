@@ -2,18 +2,20 @@
 
 @theme {
   --font-sans: "Avenir Next", "Segoe UI", sans-serif;
-  --color-canvas: #f3efe6;
-  --color-surface: #fffcf7;
-  --color-ink: #1f1a17;
-  --color-muted: #6f655d;
-  --color-line: #e4ddd2;
+  --color-canvas: #f4f0fb;
+  --color-surface: #ffffff;
+  --color-ink: #1b1033;
+  --color-muted: #5e5670;
+  --color-line: #e4dcf3;
   --color-danger: #9f1239;
   --color-success: #047857;
-  --color-accent: #0f5c56;
+  --color-accent: #531bc8;
+  --color-action: #ff6900;
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  min-height: 100dvh;
 }

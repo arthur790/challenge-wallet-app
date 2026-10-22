@@ -17,10 +17,10 @@ test("login, home, transacción y comprobante", async ({ page }) => {
   await expect(page.getByText("Saldo disponible")).toBeVisible();
 
   await page.getByRole("link", { name: "Nueva transacción" }).click();
-  await page.getByLabel("Monto").fill("20");
+  await page.getByLabel("Monto (MXN)").fill("20");
   await page.getByRole("button", { name: /Ana Ruiz/ }).click();
   await page.getByRole("button", { name: "Continuar" }).click();
   await expect(page.getByText("Destinatario")).toBeVisible();
-  await page.getByRole("button", { name: "Confirmar" }).click();
+  await page.getByRole("button", { name: /Transferir/ }).click();
   await expect(page.getByRole("heading", { name: "Comprobante" })).toBeVisible();
 });

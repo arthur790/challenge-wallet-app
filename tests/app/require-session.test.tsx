@@ -33,7 +33,7 @@ describe("RequireSession", () => {
     );
 
     expect(screen.queryByText("Saldo")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Wallet" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Cargando" })).toBeTruthy();
     expect(document.querySelector(".animate-spin")).toBeTruthy();
     expect(router.replace).not.toHaveBeenCalled();
   });
@@ -49,7 +49,7 @@ describe("RequireSession", () => {
     );
 
     expect(screen.getByText("Saldo")).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: "Wallet" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Cargando" })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
@@ -63,7 +63,7 @@ describe("RequireSession", () => {
     );
 
     expect(screen.queryByText("Saldo")).toBeNull();
-    expect(screen.getByRole("heading", { name: "Wallet" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Cargando" })).toBeTruthy();
     expect(document.querySelector(".animate-spin")).toBeTruthy();
     expect(router.replace).toHaveBeenCalledWith("/login");
   });

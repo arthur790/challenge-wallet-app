@@ -13,6 +13,7 @@ export type Receipt = {
   amount: number;
   recipientName: string;
   createdAt: string;
+  balanceAfter: number;
 };
 
 export type ConfirmationOutcome =

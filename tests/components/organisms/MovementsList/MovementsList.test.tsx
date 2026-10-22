@@ -103,7 +103,8 @@ describe("MovementsList", () => {
       />,
     );
 
-    expect(screen.getByText("Aún no tienes movimientos.")).toBeTruthy();
+    expect(screen.getByText("Aún no tienes movimientos")).toBeTruthy();
+    expect(screen.getByText("Aquí verás tus transferencias.")).toBeTruthy();
     expect(instances).toHaveLength(0);
   });
 

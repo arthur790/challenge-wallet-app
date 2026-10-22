@@ -7,6 +7,14 @@ export function formatMoney(amount: number): string {
   return money.format(amount);
 }
 
+export function amountToInput(amount: number): string {
+  if (!Number.isFinite(amount)) {
+    return "";
+  }
+
+  return amount.toFixed(2);
+}
+
 export function parseAmountInput(raw: string): number {
   const normalized = raw.trim().replace(",", ".");
 

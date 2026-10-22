@@ -85,13 +85,18 @@ export function HomeMovements({
     }
   }, [load]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   return (
-    <MovementsList
-      movements={movements}
-      hasMore={cursor !== null}
-      status={status}
-      onLoadMore={onLoadMore}
-      onRetry={onRetry}
-    />
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+      <MovementsList
+        movements={movements}
+        hasMore={cursor !== null}
+        status={status}
+        onLoadMore={onLoadMore}
+        onRetry={onRetry}
+        scrollRoot={scrollRef}
+      />
+    </div>
   );
 }

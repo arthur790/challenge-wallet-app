@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { Button } from "@/components/atoms/Button/Button";
 import { Spinner } from "@/components/atoms/Spinner/Spinner";
 import { MovementItem } from "@/components/molecules/MovementItem/MovementItem";
@@ -14,6 +14,7 @@ type MovementsListProps = {
   status: MovementsListStatus;
   onLoadMore: () => void;
   onRetry: () => void;
+  scrollRoot?: RefObject<HTMLElement | null>;
 };
 
 export function MovementsList({
@@ -22,6 +23,7 @@ export function MovementsList({
   status,
   onLoadMore,
   onRetry,
+  scrollRoot,
 }: MovementsListProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +44,7 @@ export function MovementsList({
           onLoadMore();
         }
       },
-      { root: null, rootMargin: "200px" },
+      { root: scrollRoot?.current ?? null, rootMargin: "200px" },
     );
 
     observer.observe(node);
@@ -50,13 +52,14 @@ export function MovementsList({
     return () => {
       observer.disconnect();
     };
-  }, [hasMore, movements.length, onLoadMore, status]);
+  }, [hasMore, movements.length, onLoadMore, scrollRoot, status]);
 
   if (movements.length === 0) {
     return (
       <section>
         <h2 className="text-sm font-semibold">Movimientos</h2>
-        <p className="mt-3 text-sm text-muted">Aún no tienes movimientos.</p>
+        <p className="mt-3 text-sm font-semibold">Aún no tienes movimientos</p>
+        <p className="mt-1 text-sm text-muted">Aquí verás tus transferencias.</p>
       </section>
     );
   }

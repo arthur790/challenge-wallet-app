@@ -58,6 +58,8 @@ function isOutcome(value: unknown): value is ConfirmationOutcome {
     "id" in value.receipt &&
     "amount" in value.receipt &&
     "recipientName" in value.receipt &&
-    "createdAt" in value.receipt
+    "createdAt" in value.receipt &&
+    "balanceAfter" in value.receipt &&
+    typeof value.receipt.balanceAfter === "number"
   );
 }

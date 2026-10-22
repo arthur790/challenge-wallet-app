@@ -1,15 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/atoms/Button/Button";
-import { Spinner } from "@/components/atoms/Spinner/Spinner";
+import { Skeleton } from "@/components/atoms/Skeleton/Skeleton";
 import { TransactionComposer } from "@/components/organisms/TransactionComposer/TransactionComposer";
 import { WalletTemplate } from "@/components/templates/WalletTemplate/WalletTemplate";
 import { validateNewContact, type ContactViolation } from "@/domain/contact";
 import { validateTransfer, type TransferViolation } from "@/domain/transfer";
 import type { Contact } from "@/domain/wallet";
-import { formatMoney, parseAmountInput } from "@/lib/money";
+import { amountToInput, formatMoney, parseAmountInput } from "@/lib/money";
 import { createContact, fetchContacts } from "@/services/contacts";
 import { fetchWallet } from "@/services/wallet";
 import { useDraftStore } from "@/store/draft";
@@ -30,6 +30,15 @@ const contactMessages: Record<ContactViolation, string> = {
 export default function TransactionPage() {
   const router = useRouter();
   const setDraft = useDraftStore((state) => state.setDraft);
+  const storedDraft = useSyncExternalStore(
+    useDraftStore.subscribe,
+    () => useDraftStore.getState().draft,
+    () => null,
+  );
+  const draftKey = storedDraft
+    ? `${storedDraft.amount}:${storedDraft.recipientId ?? ""}`
+    : "";
+  const [appliedDraftKey, setAppliedDraftKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -42,6 +51,15 @@ export default function TransactionPage() {
   const [savingContact, setSavingContact] = useState(false);
   const [violation, setViolation] = useState<TransferViolation | null>(null);
   const [contactError, setContactError] = useState<string | undefined>();
+
+  if (appliedDraftKey === null) {
+    setAppliedDraftKey(draftKey);
+
+    if (storedDraft) {
+      setAmount(amountToInput(storedDraft.amount));
+      setSelectedContactId(storedDraft.recipientId);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +99,7 @@ export default function TransactionPage() {
   }, [reloadKey]);
 
   const parsedAmount = parseAmountInput(amount);
+  const exceedsBalance = Number.isFinite(parsedAmount) && parsedAmount > balance;
   const selected = contacts.find((contact) => contact.id === selectedContactId);
   const summary =
     selected && Number.isFinite(parsedAmount)
@@ -89,6 +108,14 @@ export default function TransactionPage() {
           recipientLabel: selected.name,
         }
       : null;
+  const amountError =
+    violation === "amount-not-positive" || violation === "insufficient-balance"
+      ? transferMessages[violation]
+      : exceedsBalance
+        ? transferMessages["insufficient-balance"]
+        : undefined;
+  const recipientError =
+    violation === "recipient-required" ? transferMessages[violation] : undefined;
 
   async function handleSaveContact() {
     const nextViolation = validateNewContact({
@@ -144,27 +171,50 @@ export default function TransactionPage() {
     setDraft(
       { amount: parsedAmount, recipientId: selected.id },
       selected.name,
+      selected.identifier,
     );
     router.push("/transaction/confirm");
   }
 
   return (
     <RequireSession>
-      <WalletTemplate title="Nueva transacción">
-        {loading ? (
-          <div className="flex justify-center py-10">
-            <Spinner />
-          </div>
-        ) : null}
-        {loadError ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm text-danger" role="alert">
-              No pudimos cargar tu saldo y tus contactos.
-            </p>
+      <WalletTemplate
+        title="Nueva transacción"
+        primaryAction={
+          !loading && !loadError ? (
+            <Button
+              type="button"
+              disabled={savingContact || Boolean(amountError) || Boolean(recipientError)}
+              onClick={handleContinue}
+            >
+              Continuar
+            </Button>
+          ) : loadError ? (
             <Button type="button" onClick={() => setReloadKey((value) => value + 1)}>
               Reintentar
             </Button>
-          </div>
+          ) : null
+        }
+      >
+        <div className="min-h-0 flex-1 overflow-y-auto">
+        {loading ? (
+          <>
+            <p className="sr-only" role="status">
+              Cargando tu saldo y tus contactos
+            </p>
+            <div className="flex flex-col gap-4" aria-hidden="true">
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-11 w-full" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </>
+        ) : null}
+        {loadError ? (
+          <p className="text-sm text-danger" role="alert">
+            No pudimos cargar tu saldo y tus contactos.
+          </p>
         ) : null}
         {!loading && !loadError ? (
           <TransactionComposer
@@ -176,17 +226,9 @@ export default function TransactionPage() {
             savingContact={savingContact}
             loading={loading}
             summary={summary}
-            amountError={
-              violation === "amount-not-positive" ||
-              violation === "insufficient-balance"
-                ? transferMessages[violation]
-                : undefined
-            }
-            recipientError={
-              violation === "recipient-required"
-                ? transferMessages[violation]
-                : undefined
-            }
+            availableHint={`Disponible ${formatMoney(balance)}`}
+            amountError={amountError}
+            recipientError={recipientError}
             contactError={contactError}
             onAmountChange={(value) => {
               setAmount(value);
@@ -205,9 +247,9 @@ export default function TransactionPage() {
             onSaveContact={() => {
               void handleSaveContact();
             }}
-            onContinue={handleContinue}
           />
         ) : null}
+        </div>
       </WalletTemplate>
     </RequireSession>
   );

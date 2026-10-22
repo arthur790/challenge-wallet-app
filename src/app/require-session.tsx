@@ -31,7 +31,7 @@ export function RequireSession({ children }: RequireSessionProps) {
 
   if (!hasHydrated || !userId) {
     return (
-      <WalletTemplate title="Wallet">
+      <WalletTemplate title="Cargando">
         <div className="flex justify-center py-10">
           <Spinner />
         </div>

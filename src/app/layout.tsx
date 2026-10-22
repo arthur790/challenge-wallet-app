@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Wallet",
-  description: "Mini wallet de demostración",
+  title: "spin",
+  description: "Wallet de demostración",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

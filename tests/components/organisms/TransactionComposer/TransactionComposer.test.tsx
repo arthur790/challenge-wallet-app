@@ -22,7 +22,6 @@ function renderComposer(errors: { amountError?: string; recipientError?: string 
       onNewContactNameChange={noop}
       onNewContactIdentifierChange={noop}
       onSaveContact={noop}
-      onContinue={noop}
       {...errors}
     />,
   );
@@ -39,7 +38,7 @@ describe("TransactionComposer", () => {
       recipientError: "Elige o guarda un destinatario.",
     });
 
-    const amountField = screen.getByLabelText("Monto").closest("div");
+    const amountField = screen.getByLabelText("Monto (MXN)").closest("div");
     const favorites = screen.getByRole("heading", { name: "Favoritos" }).closest("section");
 
     expect(amountField?.textContent).toContain("Ingresa un monto mayor a cero.");

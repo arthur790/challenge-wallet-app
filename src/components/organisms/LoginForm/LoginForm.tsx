@@ -20,14 +20,19 @@ export function LoginForm({
 }: LoginFormProps) {
   return (
     <form
-      className="flex flex-col gap-5"
+      className="flex min-h-0 flex-1 flex-col gap-5"
       aria-busy={loading}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
       }}
     >
-      <FormField label="Teléfono o email" htmlFor="identifier" error={error}>
+      <FormField
+        label="Teléfono o email"
+        htmlFor="identifier"
+        hint="10 dígitos o un correo. Es una sesión de demostración."
+        error={error}
+      >
         <TextInput
           id="identifier"
           value={identifier}
@@ -36,10 +41,12 @@ export function LoginForm({
           onChange={(event) => onIdentifierChange(event.target.value)}
         />
       </FormField>
-      <Button type="submit" disabled={loading}>
-        {loading ? <Spinner /> : null}
-        Entrar
-      </Button>
+      <div className="mt-auto">
+        <Button type="submit" disabled={loading}>
+          {loading ? <Spinner /> : null}
+          Entrar
+        </Button>
+      </div>
     </form>
   );
 }

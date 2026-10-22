@@ -25,15 +25,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <RequireSession>
-      <WalletTemplate
-        title="Inicio"
-        primaryAction={
-          <Link href="/transaction" className={buttonClassName()}>
-            Nueva transacción
-          </Link>
-        }
-      >
-        <BalanceHeader name={wallet.user.name} balance={wallet.balance} />
+      <WalletTemplate title={`Hola, ${wallet.user.name}`}>
+        <BalanceHeader balance={wallet.balance} />
+        <Link href="/transaction" className={`${buttonClassName()} shrink-0`}>
+          Nueva transacción
+        </Link>
         <HomeMovements
           key={selected ?? "ready"}
           initialMovements={movementPage.movements}

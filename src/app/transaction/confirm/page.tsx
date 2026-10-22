@@ -2,20 +2,22 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button, buttonClassName } from "@/components/atoms/Button/Button";
 import { Spinner } from "@/components/atoms/Spinner/Spinner";
+import { SummaryRow } from "@/components/molecules/SummaryRow/SummaryRow";
 import { ConfirmationStatus } from "@/components/organisms/ConfirmationStatus/ConfirmationStatus";
 import { ReceiptCard } from "@/components/organisms/ReceiptCard/ReceiptCard";
-import { SummaryRow } from "@/components/molecules/SummaryRow/SummaryRow";
 import { WalletTemplate } from "@/components/templates/WalletTemplate/WalletTemplate";
 import {
   isConfirmationStatus,
   type ConfirmationOutcome,
   type ConfirmationStatus as OutcomeStatus,
 } from "@/domain/confirmation";
+import { maskIdentifier } from "@/lib/mask";
 import { formatMoney } from "@/lib/money";
 import { confirmTransfer } from "@/services/transfers";
+import { fetchWallet } from "@/services/wallet";
 import { useDraftStore } from "@/store/draft";
 import { RequireSession } from "../../require-session";
 
@@ -30,22 +32,20 @@ const errorCopy: Record<
 > = {
   "network-error": {
     title: "Error de conexión",
-    description: "No pudimos confirmar la transferencia. Puedes reintentar.",
+    description: "No se hizo el cargo. Puedes reintentar.",
   },
   "insufficient-funds": {
     title: "Fondos insuficientes",
-    description:
-      "El saldo ya no cubre este monto. Revisa el monto e inténtalo de nuevo.",
+    description: "No se hizo el cargo. Este monto ya no cabe en tu saldo.",
   },
   timeout: {
     title: "La confirmación tardó demasiado",
     description:
-      "La espera fue excesiva y no es un fallo de red genérico. Puedes reintentar.",
+      "La espera fue larga y no se hizo el cargo. No es una falla de conexión. Puedes reintentar.",
   },
   "unknown-error": {
     title: "Algo salió mal",
-    description:
-      "No pudimos completar la transferencia. Vuelve a la transacción.",
+    description: "No se hizo el cargo y no hay folio.",
   },
 };
 
@@ -53,14 +53,51 @@ export default function ConfirmPage() {
   const router = useRouter();
   const draft = useDraftStore((state) => state.draft);
   const recipientName = useDraftStore((state) => state.recipientName);
+  const recipientIdentifier = useDraftStore((state) => state.recipientIdentifier);
+  const clearDraft = useDraftStore((state) => state.clearDraft);
   const [submitting, setSubmitting] = useState(false);
   const [outcome, setOutcome] = useState<ConfirmationOutcome | null>(null);
+  const [available, setAvailable] = useState<number | null>(null);
+
+  useEffect(() => {
+    const stored = useDraftStore.getState().draft;
+
+    if (!stored && outcome?.status !== "success") {
+      router.replace("/transaction");
+    }
+  }, [draft, outcome, router]);
+
+  useEffect(() => {
+    if (outcome?.status !== "success") {
+      return;
+    }
+
+    clearDraft();
+  }, [clearDraft, outcome]);
 
   useEffect(() => {
     if (!draft) {
-      router.replace("/transaction");
+      return;
     }
-  }, [draft, router]);
+
+    let cancelled = false;
+
+    void fetchWallet()
+      .then((wallet) => {
+        if (!cancelled) {
+          setAvailable(wallet.balance);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setAvailable(null);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draft]);
 
   async function handleConfirm() {
     if (!draft?.recipientId) {
@@ -83,13 +120,15 @@ export default function ConfirmPage() {
     setSubmitting(false);
   }
 
-  if (!draft) {
+  if (!draft && outcome?.status !== "success") {
     return (
-      <WalletTemplate title="Confirmación">
-        <div className="flex justify-center py-10">
-          <Spinner />
-        </div>
-      </WalletTemplate>
+      <RequireSession>
+        <WalletTemplate title="Confirmación">
+          <div className="flex justify-center py-10">
+            <Spinner />
+          </div>
+        </WalletTemplate>
+      </RequireSession>
     );
   }
 
@@ -101,47 +140,104 @@ export default function ConfirmPage() {
         }
       : undefined;
 
+  let primaryAction: ReactNode = null;
+
+  if (outcome?.status === "success") {
+    primaryAction = (
+      <Link href="/home" className={buttonClassName()}>
+        Volver al inicio
+      </Link>
+    );
+  } else if (retry) {
+    primaryAction = (
+      <Button type="button" disabled={submitting} onClick={retry}>
+        {submitting ? <Spinner /> : null}
+        Reintentar
+      </Button>
+    );
+  } else if (outcome?.status === "insufficient-funds") {
+    primaryAction = (
+      <Link href="/transaction" className={buttonClassName()}>
+        Corregir monto
+      </Link>
+    );
+  } else if (outcome?.status === "unknown-error") {
+    primaryAction = (
+      <div className="flex flex-col gap-3">
+        <Link href="/transaction" className={buttonClassName()}>
+          Volver a la transacción
+        </Link>
+        <Link href="/home" className={buttonClassName("secondary")}>
+          Ver movimientos
+        </Link>
+      </div>
+    );
+  } else if (draft) {
+    primaryAction = (
+      <Button
+        type="button"
+        disabled={submitting}
+        onClick={() => {
+          void handleConfirm();
+        }}
+      >
+        {submitting ? <Spinner /> : null}
+        Transferir {formatMoney(draft.amount)}
+      </Button>
+    );
+  }
+
+  const remaining =
+    draft && available !== null
+      ? Math.round((available - draft.amount) * 100) / 100
+      : null;
+
   return (
     <RequireSession>
-      <WalletTemplate
-        title="Confirmación"
-        primaryAction={
-          outcome?.status === "success" ? (
-            <Link href="/home" className={buttonClassName()}>
-              Volver al inicio
-            </Link>
-          ) : outcome && !retry ? (
-            <Link href="/transaction" className={buttonClassName("secondary")}>
-              Volver a la transacción
-            </Link>
-          ) : outcome ? null : (
-            <Button
-              type="button"
-              disabled={submitting}
-              onClick={() => {
-                void handleConfirm();
-              }}
-            >
-              {submitting ? <Spinner /> : null}
-              Confirmar
-            </Button>
-          )
-        }
-      >
-        <section className="flex flex-col gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
-          <SummaryRow label="Monto" value={formatMoney(draft.amount)} />
-          <SummaryRow label="Destinatario" value={recipientName} />
-        </section>
-        {outcome?.status === "success" ? (
-          <ReceiptCard receipt={outcome.receipt} />
-        ) : null}
-        {outcome && outcome.status !== "success" ? (
-          <ConfirmationStatus
-            title={errorCopy[outcome.status].title}
-            description={errorCopy[outcome.status].description}
-            onRetry={submitting ? undefined : retry}
-          />
-        ) : null}
+      <WalletTemplate title="Confirmación" primaryAction={primaryAction}>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+          {draft && outcome?.status !== "success" ? (
+            <section className="flex flex-col gap-3">
+              <dl className="flex flex-col gap-2 rounded-2xl border border-line bg-surface px-4 py-3">
+                <SummaryRow label="Monto" value={formatMoney(draft.amount)} />
+                <SummaryRow
+                  label="Destinatario"
+                  value={
+                    recipientIdentifier
+                      ? `${recipientName} · ${maskIdentifier(recipientIdentifier)}`
+                      : recipientName
+                  }
+                />
+                <SummaryRow label="Comisión" value="Sin comisión" />
+                {remaining !== null && remaining >= 0 ? (
+                  <SummaryRow label="Saldo después" value={formatMoney(remaining)} />
+                ) : null}
+                {remaining !== null && remaining < 0 && available !== null ? (
+                  <SummaryRow label="Saldo disponible" value={formatMoney(available)} />
+                ) : null}
+              </dl>
+              {!submitting && !outcome ? (
+                <Link href="/transaction" className="self-start text-sm font-semibold text-accent">
+                  Corregir
+                </Link>
+              ) : null}
+            </section>
+          ) : null}
+          <div aria-live="polite" className="flex flex-col gap-4">
+            {submitting ? (
+              <p className="text-sm font-medium">Confirmando la transferencia…</p>
+            ) : null}
+            {!submitting && outcome && outcome.status !== "success" ? (
+              <ConfirmationStatus
+                title={errorCopy[outcome.status].title}
+                description={errorCopy[outcome.status].description}
+              />
+            ) : null}
+            {!submitting && outcome?.status === "success" ? (
+              <ReceiptCard receipt={outcome.receipt} />
+            ) : null}
+          </div>
+        </div>
       </WalletTemplate>
     </RequireSession>
   );

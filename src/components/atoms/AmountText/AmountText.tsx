@@ -5,5 +5,5 @@ type AmountTextProps = {
 };
 
 export function AmountText({ amount }: AmountTextProps) {
-  return <span>{formatMoney(amount)}</span>;
+  return <span className="tabular-nums">{formatMoney(amount)}</span>;
 }

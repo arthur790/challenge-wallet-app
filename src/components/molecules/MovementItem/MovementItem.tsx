@@ -30,7 +30,7 @@ export function MovementItem({
           {dateFormat.format(new Date(createdAt))}
         </span>
       </span>
-      <span className={`text-sm font-semibold ${tone}`}>
+      <span className={`shrink-0 text-right text-sm font-semibold tabular-nums ${tone}`}>
         {direction === "out" ? "−" : "+"}
         <AmountText amount={amount} />
       </span>

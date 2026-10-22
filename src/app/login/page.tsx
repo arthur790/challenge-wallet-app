@@ -40,7 +40,7 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthTemplate title="Entra a tu wallet">
+    <AuthTemplate title="Entra a spin">
       <LoginForm
         identifier={identifier}
         onIdentifierChange={setIdentifier}

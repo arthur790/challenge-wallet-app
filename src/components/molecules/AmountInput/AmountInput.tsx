@@ -5,11 +5,12 @@ type AmountInputProps = {
   value: string;
   onChange: (value: string) => void;
   error?: string;
+  hint?: string;
 };
 
-export function AmountInput({ value, onChange, error }: AmountInputProps) {
+export function AmountInput({ value, onChange, error, hint }: AmountInputProps) {
   return (
-    <FormField label="Monto" htmlFor="amount" error={error}>
+    <FormField label="Monto (MXN)" htmlFor="amount" error={error} hint={hint}>
       <TextInput
         id="amount"
         inputMode="decimal"

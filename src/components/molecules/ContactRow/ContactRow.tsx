@@ -1,3 +1,5 @@
+import { maskIdentifier } from "@/lib/mask";
+
 type ContactRowProps = {
   name: string;
   identifier: string;
@@ -16,13 +18,13 @@ export function ContactRow({
       type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left ${
+      className={`flex min-h-11 w-full items-center justify-between rounded-2xl border px-3 py-3 text-left ${
         selected ? "border-accent bg-accent/5" : "border-line bg-surface"
       }`}
     >
       <span>
         <span className="block text-sm font-semibold">{name}</span>
-        <span className="block text-sm text-muted">{identifier}</span>
+        <span className="block text-sm text-muted">{maskIdentifier(identifier)}</span>
       </span>
     </button>
   );

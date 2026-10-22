@@ -52,7 +52,7 @@ export default function TransactionPage() {
   const [violation, setViolation] = useState<TransferViolation | null>(null);
   const [contactError, setContactError] = useState<string | undefined>();
 
-  if (appliedDraftKey === null) {
+  if (appliedDraftKey !== draftKey) {
     setAppliedDraftKey(draftKey);
 
     if (storedDraft) {
@@ -99,7 +99,10 @@ export default function TransactionPage() {
   }, [reloadKey]);
 
   const parsedAmount = parseAmountInput(amount);
-  const exceedsBalance = Number.isFinite(parsedAmount) && parsedAmount > balance;
+  const liveViolation = validateTransfer(
+    { amount: parsedAmount, recipientId: selectedContactId },
+    balance,
+  );
   const selected = contacts.find((contact) => contact.id === selectedContactId);
   const summary =
     selected && Number.isFinite(parsedAmount)
@@ -111,7 +114,7 @@ export default function TransactionPage() {
   const amountError =
     violation === "amount-not-positive" || violation === "insufficient-balance"
       ? transferMessages[violation]
-      : exceedsBalance
+      : liveViolation === "insufficient-balance"
         ? transferMessages["insufficient-balance"]
         : undefined;
   const recipientError =

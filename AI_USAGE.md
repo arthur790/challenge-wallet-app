@@ -69,6 +69,6 @@
 ## Qué decidió la persona
 
 - Tailwind CSS para la UI.
-- Next.js reciente, con el setup inicial hecho mediante los comandos oficiales.
 - Ejecutar el desarrollo por fases.
 - Implementar el patrón Atomic Design
+- Implementar un tema y diseño basado en Spin
